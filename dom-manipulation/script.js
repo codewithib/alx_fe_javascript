@@ -13,7 +13,7 @@
 // Grabbng my element from dom
 const quoteDisplay = document.querySelector("#quoteDisplay");
 
-const showQuoteBtn = document.querySelector("#newQuote");
+const showQuoteBtn = document.getElementById("newQuote");
 
 const userForm = document.querySelector(".user-form");
 const quoteInput = document.querySelector("#quote-text");
