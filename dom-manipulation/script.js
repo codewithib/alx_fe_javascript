@@ -1,14 +1,3 @@
-// const showRandomText = () => {
-//     let textArray = [
-//          "Hardwork", "Singing", "Writing", "Editing"
-//     ];
-
-//     let randomContent = Math.floor(Math.random() * textArray.length);
-//     return textArray[randomContent];
-// }
-
-// let result = showRandomText();
-// console.log(result);
 
 // Grabbng my element from dom
 const quoteDisplay = document.querySelector("#quoteDisplay");
@@ -19,6 +8,16 @@ const userForm = document.querySelector(".user-form");
 const quoteInput = document.querySelector("#quote-text");
 const catInput = document.querySelector("#quote-category");
 const addQuoteBtn = document.querySelector(".add-quote");
+
+const downloadContainer = document.querySelector(".download-quotes");
+
+const downloadBtn = document.querySelector(".download-btn");
+
+const fileInput = document.querySelector("#import-quote");
+
+const uploadBtn = document.querySelector(".upload-btn");
+
+const importForm = document.querySelector(".import-form");
 
 // Array of quotes
 
@@ -134,6 +133,62 @@ const createAddQuoteForm = (e) => {
 
 }
 
+// Function to export quotes
+
+const exportQuotes = () => {
+    if (savedQuotes.length === 0 ) {
+        alert("No quotes available to export");
+    }
+
+    // Convert quotes to JSON string
+    const jsonQuote = JSON.stringify(savedQuotes, null, 2);
+    const blob = new Blob([jsonQuote], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+
+    // Creating a tag and assigning my blob url to it
+    const a = document.createElement("a");
+    downloadContainer.appendChild(a);
+    a.href = url;
+    a.download = "Quotes.json";
+    a.click();
+    downloadContainer.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log(url);
+
+    // testing to read my blob file
+    const reader = new FileReader();
+    reader.onload = () => {
+        console.log(this.result);
+    }
+    reader.readAsText(blob);
+}
+
+// Function to import quotes, read it, and update the quote array
+
+const importQuote = (event) => {
+    const file = event.target.files[0];
+    if(!file) {
+        alert("Please select a file!");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+        try {
+            console.log("File Content:", e.target.result);
+            const importedQuotes = JSON.parse(e.target.result);
+            savedQuotes.push(...importedQuotes);
+            saveQuote();
+
+        } catch(error) {
+            alert(error);
+        }
+    }
+
+    reader.readAsText(file);
+}
+
 // Load quotes on page load
 
 document.addEventListener("DOMContentLoaded", loadQuote);
@@ -149,3 +204,15 @@ showQuoteBtn.addEventListener("click", showRandomQuote);
 
 userForm.addEventListener("submit", createAddQuoteForm);
 
+downloadBtn.addEventListener("click", exportQuotes);
+
+// fileInput.onchange = function(e) {
+//     let file = this.files[0];
+//     console.log("name:", file.name);
+//     console.log("size:", file.size);
+//     console.log("type:", file.type);
+// }
+
+fileInput.addEventListener("change", importQuote);
+
+importForm.addEventListener("submit", importQuote);
