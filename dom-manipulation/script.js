@@ -155,12 +155,6 @@ const exportQuotes = () => {
     URL.revokeObjectURL(url);
     console.log(url);
 
-    // testing to read my blob file
-    const reader = new FileReader();
-    reader.onload = () => {
-        console.log(this.result);
-    }
-    reader.readAsText(blob);
 }
 
 // Function to import quotes, read it, and update the quote array
