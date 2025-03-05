@@ -260,62 +260,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-const API_URL = "https://jsonplaceholder.typicode.com/posts"; // Mock API for testing
-
-// Fetch quotes from the server
-const fetchQuotesFromServer = async () => {
-    try {
-        const response = await fetch(API_URL);
-        const serverQuotes = await response.json();
-        
-        if (serverQuotes.length > 0) {
-            resolveConflicts(serverQuotes);
-        }
-    } catch (error) {
-        console.error("Error fetching quotes:", error);
-    }
-};
-
-// Sync local quotes to the server
-const syncQuotesToServer = async () => {
-    try {
-        for (let quote of savedQuotes) {
-            await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(quote),
-                headers: { "Content-Type": "application/json" }
-            });
-        }
-        console.log("Quotes synced to server.");
-    } catch (error) {
-        console.error("Error syncing quotes:", error);
-    }
-};
-
-// Resolve conflicts by ensuring server data takes precedence
-const resolveConflicts = (serverQuotes) => {
-    let localQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
-    
-    // Compare local and server quotes
-    const isDifferent = JSON.stringify(localQuotes) !== JSON.stringify(serverQuotes);
-    
-    if (isDifferent) {
-        // Notify user of conflicts
-        alert("Quotes synced with server!");
-        
-        // Server data takes precedence
-        savedQuotes = serverQuotes;
-        localStorage.setItem("quotes", JSON.stringify(savedQuotes));
-        
-        // Refresh UI
-        populateCategories();
-        filterQuotes();
-    }
-};
-
-// Periodically fetch and sync data
-setInterval(fetchQuotesFromServer, 5000); // Fetch every 5 seconds
-setInterval(syncQuotesToServer, 10000); // Sync every 10 seconds
 
 
 
