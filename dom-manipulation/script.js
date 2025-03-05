@@ -19,6 +19,11 @@ const uploadBtn = document.querySelector(".upload-btn");
 
 const importForm = document.querySelector(".import-form");
 
+// Grabbing my filter-form details from DOM
+
+const filterForm = document.querySelector(".filter-form");
+const categoryFilter = document.querySelector("#category-filter");
+
 // Array of quotes
 
 let savedQuotes = [
@@ -60,7 +65,11 @@ let savedQuotes = [
 const showRandomQuote = () => {
     if (savedQuotes.length === 0) {
         alert("Nothing to display");
+        return;
     }
+
+    // createQuoteElement(savedQuotes);
+    
     let random = Math.floor(Math.random() * savedQuotes.length)
     let randomQuote = savedQuotes[random];
 
@@ -82,7 +91,7 @@ const showRandomQuote = () => {
 
     quoteDisplay.appendChild(quoteContainer);
     quoteContainer.appendChild(quoteText);
-    quoteContainer.appendChild(quoteCategory)
+    quoteContainer.appendChild(quoteCategory);
 
     console.log(savedQuotes);
 
@@ -130,6 +139,8 @@ const createAddQuoteForm = (e) => {
 
     quoteInput.value = "";
     catInput.value = "";
+    populateCategories();
+
 
 }
 
@@ -138,6 +149,7 @@ const createAddQuoteForm = (e) => {
 const exportQuotes = () => {
     if (savedQuotes.length === 0 ) {
         alert("No quotes available to export");
+        return;
     }
 
     // Convert quotes to JSON string
@@ -174,6 +186,8 @@ const importQuote = (event) => {
             const importedQuotes = JSON.parse(e.target.result);
             savedQuotes.push(...importedQuotes);
             saveQuote();
+            populateCategories();
+            filterQuotes();
 
         } catch(error) {
             alert(error);
@@ -183,9 +197,125 @@ const importQuote = (event) => {
     reader.readAsText(file);
 }
 
+// Function to populate category dynamically
+
+const populateCategories = () => {
+    const uniqueCategories = [...new Set (savedQuotes.map(quote => quote.category))];
+    console.log(uniqueCategories);
+
+    categoryFilter.innerHTML = `<option value="">All Categories</option>`;
+
+    for (let singleCat of uniqueCategories) {
+        const option = document.createElement("option");
+        categoryFilter.appendChild(option);
+        option.textContent = singleCat;
+        option.value = singleCat;
+        console.log(singleCat);
+
+    }
+}
+
+// Function to filter quotes based on selected category
+
+const filterQuotes = () => {
+    const selectedCategory = categoryFilter.value;
+
+    const filteredQuotes = savedQuotes.filter(quote => 
+        selectedCategory === "" || quote.category === selectedCategory
+    );
+
+    localStorage.setItem("selectedCategory", selectedCategory);
+
+    quoteDisplay.innerHTML = "";
+    for (let quote of filteredQuotes) {
+        const quoteContainer = document.createElement("div");
+        quoteContainer.classList.add("quote-container");
+
+        const quoteText = document.createElement("p");
+        quoteText.classList.add("quote-text");
+        quoteText.textContent = quote.text;
+
+        const quoteCategory = document.createElement("p");
+        quoteCategory.classList.add("quote-category");
+        quoteCategory.textContent = `Category: ${quote.category}`;
+
+        quoteContainer.appendChild(quoteText);
+        quoteContainer.appendChild(quoteCategory);
+        quoteDisplay.appendChild(quoteContainer);
+    }
+    console.log(selectedCategory);
+}
+
+categoryFilter.addEventListener("change", filterQuotes);
+
 // Load quotes on page load
 
-document.addEventListener("DOMContentLoaded", loadQuote);
+document.addEventListener("DOMContentLoaded", () => {
+    loadQuote();
+    populateCategories();
+    const lastSelectedCategory = localStorage.getItem("selectedCategory");
+    if (lastSelectedCategory) {
+        categoryFilter.value = lastSelectedCategory;
+        filterQuotes();
+    }
+});
+
+const API_URL = "https://jsonplaceholder.typicode.com/posts"; // Mock API for testing
+
+// Fetch quotes from the server
+const fetchQuotesFromServer = async () => {
+    try {
+        const response = await fetch(API_URL);
+        const serverQuotes = await response.json();
+        
+        if (serverQuotes.length > 0) {
+            resolveConflicts(serverQuotes);
+        }
+    } catch (error) {
+        console.error("Error fetching quotes:", error);
+    }
+};
+
+// Sync local quotes to the server
+const syncQuotesToServer = async () => {
+    try {
+        for (let quote of savedQuotes) {
+            await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(quote),
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+        console.log("Quotes synced to server.");
+    } catch (error) {
+        console.error("Error syncing quotes:", error);
+    }
+};
+
+// Resolve conflicts by ensuring server data takes precedence
+const resolveConflicts = (serverQuotes) => {
+    let localQuotes = JSON.parse(localStorage.getItem("quotes") || "[]");
+    
+    // Compare local and server quotes
+    const isDifferent = JSON.stringify(localQuotes) !== JSON.stringify(serverQuotes);
+    
+    if (isDifferent) {
+        // Notify user of conflicts
+        alert("Data has changed on the server. Updating local data...");
+        
+        // Server data takes precedence
+        savedQuotes = serverQuotes;
+        localStorage.setItem("quotes", JSON.stringify(savedQuotes));
+        
+        // Refresh UI
+        populateCategories();
+        filterQuotes();
+    }
+};
+
+// Periodically fetch and sync data
+setInterval(fetchQuotesFromServer, 5000); // Fetch every 5 seconds
+setInterval(syncQuotesToServer, 10000); // Sync every 10 seconds
 
 
 
@@ -208,5 +338,3 @@ downloadBtn.addEventListener("click", exportQuotes);
 // }
 
 fileInput.addEventListener("change", importQuote);
-
-importForm.addEventListener("submit", importQuote);

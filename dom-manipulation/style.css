@@ -124,3 +124,24 @@ body {
     display: inline-block;
     border: none;
 }
+
+.filter-form {
+    display: block;
+    max-width: 20rem;
+    margin-top: 1rem;
+
+    label {
+        display: block;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+
+    select {
+        width: 100%;
+        padding: 1rem 0.5rem;
+        outline: none;
+        font-size: 1rem;
+    }
+
+}
