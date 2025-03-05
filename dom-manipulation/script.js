@@ -301,7 +301,7 @@ const resolveConflicts = (serverQuotes) => {
     
     if (isDifferent) {
         // Notify user of conflicts
-        alert("Data has changed on the server. Updating local data...");
+        alert("Quotes synced with server!");
         
         // Server data takes precedence
         savedQuotes = serverQuotes;
